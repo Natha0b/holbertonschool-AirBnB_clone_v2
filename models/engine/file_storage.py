@@ -11,12 +11,13 @@ class FileStorage:
     def all(self, cls=None):
         """Returns a dictionary of models currently in storage"""
         if cls:
-            var_cls = {}
+            obj_list = {}
             for key, value in FileStorage.__objects.items():
-                if isinstance(value, cls):
-                    var_cls[key] = value
-            return var_cls
-        return FileStorage.__objects
+                if type(value) == cls:
+                    obj_list[key] = value
+            return obj_list
+        else:
+            return FileStorage.__objects
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
@@ -42,29 +43,29 @@ class FileStorage:
         from models.review import Review
 
         classes = {
-            'BaseModel': BaseModel, 'User': User, 'Place': Place,
-            'State': State, 'City': City, 'Amenity': Amenity,
-            'Review': Review
-        }
-
+                    'BaseModel': BaseModel, 'User': User, 'Place': Place,
+                    'State': State, 'City': City, 'Amenity': Amenity,
+                    'Review': Review
+                  }
         try:
             temp = {}
-            with open(FileStorage.__file_path, 'r') as f:
-                temp = json.load(f)
+            with open(FileStorage.__file_path, 'rb') as f:
+                temp = json.loads(f.read())
                 for key, val in temp.items():
-                    self.all()[key] = classes[val['__class__']](**val)
+                        self.all()[key] = classes[val['__class__']](**val)
         except FileNotFoundError:
             pass
 
     def delete(self, obj=None):
-        """Delete Method"""
-        if obj:
-            key = obj.to_dict()['__class__'] + '.' + obj.id
-            try:
-                del self.__objects[key]
-            except Exception:
-                return
-    
+        """Delete a object """
+        if not obj:
+            return
+        name_cl = type(obj).__name__
+        obs = name_cl + "." + str(obj.id)
+        if obs in self.__objects:
+            del self.__objects[obs]
+            self.save()
+
     def close(self):
-        """Closes connection"""
+        """call reload() method for deserializing the JSON file to objects"""
         self.reload()
