@@ -24,25 +24,30 @@ class DBStorage:
         password = getenv('HBNB_MYSQL_PWD')
         host = getenv('HBNB_MYSQL_HOST')
         database = getenv('HBNB_MYSQL_DB')
-        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
-                                      .format(user, password, host, database),
-                                      pool_pre_ping=True)
+        self.__engine = \
+            create_engine(
+                'mysql+mysqldb://{}:{}@{}:3306/{}'.format(
+                    user,
+                    password,
+                    host,
+                    database), pool_pre_ping=True)
 
         if getenv('HBNB_ENV') == 'test':
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
         """something"""
-        classdict = {}
-        if cls is None:
-            cls = [State, City, User, Place, Review, Amenity]
+        value = {}
+        if cls:
+            for obj in self.__session.query(cls):
+                key = '{}.{}'.format(type(obj).__name__, obj.id)
+                value[key] = obj
         else:
-            cls = [cls]
-        for classes in cls:
-            for result in self.__session.query(classes).all():
-                key = "{}.{}".format(type(result).__name__, result.id)
-                classdict[key] = result
-        return classdict
+            for cls in [Amenity, City, Place, Review, State, User]:
+                for obj in self.__session.query(cls):
+                    key = '{}.{}'.format(type(obj).__name__, obj.id)
+                    value[key] = obj
+        return value
 
     def new(self, obj):
         """add the object to the current database session"""
