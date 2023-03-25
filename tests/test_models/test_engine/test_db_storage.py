@@ -7,7 +7,7 @@ import os
 from models.state import State
 
 
-class TestDBStorage(unittest.TestCase):
+class test_dbstorage(unittest.TestCase):
     """ Class to test the DBstorage method """
 
     @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') != 'db',
@@ -34,14 +34,14 @@ class TestDBStorage(unittest.TestCase):
         self.assertEqual(type(storage.all()), dict)
 
     def test_store(self):
-        """ Test if an object is stored in the database """
+        """ Test if an object is store in the database """
         new = State(name="Florida")
         new.save()
         _id = new.to_dict()['id']
         self.assertIn(new.__class__.__name__ + '.' + _id,
-                      storage.all(type(new)).keys())
+                        storage.all(type(new)).keys())
 
     def test_storage_var_created(self):
-        """ DBStorage object storage created """
+        """ FileStorage object storage created """
         from models.engine.db_storage import DBStorage
-        self.assertIsInstance(storage, DBStorage)
+        self.assertEqual(type(storage), DBStorage)
