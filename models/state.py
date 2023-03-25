@@ -13,15 +13,18 @@ class State(BaseModel, Base):
     __tablename__ = "states"
 
     name = Column(String(128), nullable=False)
+    
+    storage = getenv("HBNB_TYPE_STORAGE")
 
-    if getenv('HBNB_TYPE_STORAGE') == "db":
-        cities = relationship("City", cascade="all, delete")
-    else:
+    if storage == 'fs':
         @property
         def cities(self):
-            """property that returns a list of city instances"""
-            citylist = []
-            for city in models.storage.all(City).values():
-                if self.id == city.state_id:
-                    citylist.append(city)
-            return citylist
+            """Returning the cities in the current state"""
+            from models import storage
+            city_list = []
+            for city in list(storage.all().values()):
+                if city.state_id == self.id:
+                    city_list.append(city)
+            return city_list
+    if storage == 'db':
+        cities = relationship('City', backref='state', cascade='all, delete')

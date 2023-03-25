@@ -1,47 +1,86 @@
 #!/usr/bin/python3
-""" Module for testing db storage"""
+"""test for file storage"""
 import unittest
-from models.base_model import Base
-from models.state import State
-from models.engine.db_storage import DBStorage
-from models import storage
-import os
-import inspect
 import pep8
+import json
+import os
+from os import getenv
 import MySQLdb
-from unittest.case import skipIf
+from models.base_model import BaseModel, Base
+from models.user import User
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.place import Place
+from models.review import Review
+from models.engine.db_storage import DBStorage
 
 
-class TestDBStorageDoc(unittest.TestCase):
-    "Tests documentation and pep8 for DBStorage class."
+@unittest.skipIf(getenv("HBNB_TYPE_STORAGE") != 'db', 'NO DB')
+class TestDBStorage(unittest.TestCase):
+    '''this will test the DBStorage'''
 
     @classmethod
-    def setUpClass(cls):
-        """Sets the whole functions of the class DBStorage to be inspected for
-        correct documentation."""
-        cls.functions = inspect.getmembers(DBStorage,
-                                           inspect.isfunction(DBStorage))
+    def setUpClass(self):
+        """set up for test"""
+        self.User = getenv("HBNB_MYSQL_USER")
+        self.Passwd = getenv("HBNB_MYSQL_PWD")
+        self.Db = getenv("HBNB_MYSQL_DB")
+        self.Host = getenv("HBNB_MYSQL_HOST")
+        self.db = MySQLdb.connect(host=self.Host, user=self.User,
+                                  passwd=self.Passwd, db=self.Db,
+                                  charset="utf8")
+        self.query = self.db.cursor()
+        self.storage = DBStorage()
+        self.storage.reload()
 
-    def test_doc_module(self):
-        """Tests for docstring presence in the module and the class."""
-        from models.engine import db_storage
+    @classmethod
+    def teardown(self):
+        """at the end of the test this will tear it down"""
+        self.query.close()
+        self.db.close()
 
-        self.assertTrue(len(db_storage.__doc__) > 0)
-        self.assertTrue(len(db_storage.DBStorage.__doc__) > 0)
+    @unittest.skipIf(getenv("HBNB_TYPE_STORAGE") != 'db', 'NO DB')
+    def test_pep8_DBStorage(self):
+        """Test Pep8"""
+        style = pep8.StyleGuide(quiet=True)
+        p = style.check_files(['models/engine/db_storage.py'])
+        self.assertEqual(p.total_errors, 0, "fix pep8")
 
-    def test_doc_fun(self):
-        """Tests for docstring presence in all functions of class."""
-        for fun in self.functions:
-            self.assertTrue(len(fun.__doc__) > 0)
+    @unittest.skipIf(getenv("HBNB_TYPE_STORAGE") != 'db', 'NO DB')
+    def test_read_tables(self):
+        """existing tables"""
+        self.query.execute("SHOW TABLES")
+        salida = self.query.fetchall()
+        self.assertEqual(len(salida), 7)
 
-    def test_pep8(self):
-        """Tests pep8 style compliance of module and test files."""
-        p8 = pep8.StyleGuide(quiet=False)
+    @unittest.skipIf(getenv("HBNB_TYPE_STORAGE") != 'db', 'NO DB')
+    def test_no_element_user(self):
+        """no elem in users"""
+        self.query.execute("SELECT * FROM users")
+        salida = self.query.fetchall()
+        self.assertEqual(len(salida), 0)
 
-        res = p8.check_files(['models/engine/db_storage.py'])
-        self.assertEqual(res.total_errors, 0,
-                         "Found code style errors (and warnings).")
-        res = p8.check_files(
-            ['tests/test_models/test_engine/test_db_storage.py'])
-        self.assertEqual(res.total_errors, 0,
-                         "Found code style errors (and warnings).")
+    @unittest.skipIf(getenv("HBNB_TYPE_STORAGE") != 'db', 'NO DB')
+    def test_no_element_cities(self):
+        """no elem in cities"""
+        self.query.execute("SELECT * FROM cities")
+        salida = self.query.fetchall()
+        self.assertEqual(len(salida), 0)
+
+    @unittest.skipIf(getenv("HBNB_TYPE_STORAGE") != 'db', 'NO DB')
+    def test_add(self):
+        """Test same size between storage() and existing db"""
+        self.query.execute("SELECT * FROM states")
+        salida = self.query.fetchall()
+        self.assertEqual(len(salida), 0)
+        state = State(name="LUISILLO")
+        state.save()
+        self.db.autocommit(True)
+        self.query.execute("SELECT * FROM states")
+        salida = self.query.fetchall()
+        self.assertEqual(len(salida), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
