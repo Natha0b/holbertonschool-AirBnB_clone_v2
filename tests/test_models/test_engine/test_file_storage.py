@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """test for file storage"""
 import unittest
-import pep8
 import json
 import os
 from models.base_model import BaseModel
@@ -20,76 +19,101 @@ class TestFileStorage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """set up for test"""
-        cls.user = User()
-        cls.user.first_name = "Kev"
-        cls.user.last_name = "Yo"
-        cls.user.email = "1234@yahoo.com"
+        try:
+            os.rename("file.json", "tmp")
+        except IOError:
+            pass
+        FileStorage._FileStorage__objects = {}
         cls.storage = FileStorage()
+        cls.base = BaseModel()
+        key = "{}.{}".format(type(cls.base).__name__, cls.base.id)
+        FileStorage._FileStorage__objects[key] = cls.base
+        cls.user = User()
+        key = "{}.{}".format(type(cls.user).__name__, cls.user.id)
+        FileStorage._FileStorage__objects[key] = cls.user
+        cls.state = State()
+        key = "{}.{}".format(type(cls.state).__name__, cls.state.id)
+        FileStorage._FileStorage__objects[key] = cls.state
+        cls.place = Place()
+        key = "{}.{}".format(type(cls.place).__name__, cls.place.id)
+        FileStorage._FileStorage__objects[key] = cls.place
+        cls.city = City()
+        key = "{}.{}".format(type(cls.city).__name__, cls.city.id)
+        FileStorage._FileStorage__objects[key] = cls.city
+        cls.amenity = Amenity()
+        key = "{}.{}".format(type(cls.amenity).__name__, cls.amenity.id)
+        FileStorage._FileStorage__objects[key] = cls.amenity
+        cls.review = Review()
+        key = "{}.{}".format(type(cls.review).__name__, cls.review.id)
+        FileStorage._FileStorage__objects[key] = cls.review
 
     @classmethod
-    def teardown(cls):
-        """at the end of the test this will tear it down"""
-        del cls.user
-
-    def tearDown(self):
-        """teardown"""
+    def tearDownClass(cls):
+        """FileStorage testing teardown.
+        Restore original file.json.
+        Delete all test class instances.
+        """
         try:
             os.remove("file.json")
-        except Exception:
+        except IOError:
             pass
+        try:
+            os.rename("tmp", "file.json")
+        except IOError:
+            pass
+        del cls.storage
+        del cls.base
+        del cls.user
+        del cls.state
+        del cls.place
+        del cls.city
+        del cls.amenity
+        del cls.review
 
-    def test_pep8_FileStorage(self):
-        """Tests pep8 style"""
-        style = pep8.StyleGuide(quiet=True)
-        p = style.check_files(['models/engine/file_storage.py'])
-        self.assertEqual(p.total_errors, 0, "fix pep8")
+    def test_docstrings(self):
+        """Check for docstrings."""
+        self.assertIsNotNone(FileStorage.__doc__)
+        self.assertIsNotNone(FileStorage.all.__doc__)
+        self.assertIsNotNone(FileStorage.new.__doc__)
+        self.assertIsNotNone(FileStorage.reload.__doc__)
+        self.assertIsNotNone(FileStorage.delete.__doc__)
+
+    def test_attributes(self):
+        """Check for attributes."""
+        self.assertEqual(str, type(FileStorage._FileStorage__file_path))
+        self.assertEqual(dict, type(FileStorage._FileStorage__objects))
+
+    def test_methods(self):
+        """Check for methods."""
+        self.assertTrue(hasattr(FileStorage, "all"))
+        self.assertTrue(hasattr(FileStorage, "new"))
+        self.assertTrue(hasattr(FileStorage, "reload"))
+        self.assertTrue(hasattr(FileStorage, "delete"))
 
     def test_all(self):
-        """tests if all works in File Storage"""
-        storage = FileStorage()
-        obj = storage.all()
-        self.assertIsNotNone(obj)
+        """Test default all method."""
+        obj = self.storage.all()
         self.assertEqual(type(obj), dict)
-        self.assertIs(obj, storage._FileStorage__objects)
+        self.assertIs(obj, FileStorage._FileStorage__objects)
+        self.assertEqual(len(obj), 7)
 
     def test_new(self):
-        """test when new is created"""
-        storage = FileStorage()
-        obj = storage.all()
-        user = User()
-        user.id = 123455
-        user.name = "Kevin"
-        storage.new(user)
-        key = user.__class__.__name__ + "." + str(user.id)
-        self.assertIsNotNone(obj[key])
+        """Test new method."""
+        bm = BaseModel()
+        self.storage.new(bm)
+        store = FileStorage._FileStorage__objects
+        self.assertIn("BaseModel." + bm.id, store.keys())
+        self.assertIn(self.base, store.values())
 
-    def test_reload_filestorage(self):
-        """
-        tests reload
-        """
-        self.storage.save()
-        Root = os.path.dirname(os.path.abspath("console.py"))
-        path = os.path.join(Root, "file.json")
-        with open(path, 'r') as f:
-            lines = f.readlines()
-        try:
-            os.remove(path)
-        except Exception:
-            pass
-        self.storage.save()
-        with open(path, 'r') as f:
-            lines2 = f.readlines()
-        self.assertEqual(lines, lines2)
-        try:
-            os.remove(path)
-        except Exception:
-            pass
-        with open(path, "w") as f:
-            f.write("{}")
-        with open(path, "r") as r:
-            for line in r:
-                self.assertEqual(line, "{}")
-        self.assertIs(self.storage.reload(), None)
+    def test_reload(self):
+        """Test reload method."""
+        bm = BaseModel()
+        with open("file.json", "w", encoding="utf-8") as f:
+            key = "{}.{}".format(type(bm).__name__, bm.id)
+            json.dump({key: bm.to_dict()}, f)
+        self.storage.reload()
+        store = FileStorage._FileStorage__objects
+        self.assertIn("BaseModel." + bm.id, store)
 
 
 if __name__ == "__main__":
