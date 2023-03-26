@@ -3,7 +3,7 @@
 import cmd
 import sys
 from models.base_model import BaseModel
-from models import storage
+from models.__init__ import storage
 from models.user import User
 from models.place import Place
 from models.state import State
@@ -113,27 +113,46 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class"""
+        classname, *params = args.split()
 
-        arg = args.split(" ")
-        if not arg:
+        # Vallidations
+        if not classname:
             print("** class name missing **")
-            return
-        elif arg[0] not in HBNBCommand.classes:
+        if classname not in HBNBCommand.classes:
             print("** class doesn't exist **")
-            return
-        new_instance = HBNBCommand.classes[arg[0]]()
-        if len(arg) > 1:
-            for x in arg[1:]:
-                param = x.split("=")[1].replace("_", " ")
-                try:
-                    param = eval(param)
-                except Exception:
-                    pass
-                setattr(new_instance, x.split("=")[0], param)
-        new_instance.save()
-        print(new_instance.id)
-        storage.save()
+
+        object_params = {}
+
+        for param in params:
+            # Replace underscores with spaces in the value
+            key, value = param.split('=')
+            value = value.replace('_', ' ')
+
+            # checks if it is a string and removes the quotation marks
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1].replace('\\"', '"')
+            # Check if the value is a float
+            elif '.' in value and\
+                    all(char.isdigit()
+                        for char in value.strip('-').replace('.', '', 1)):
+                value = float(value)
+            # check id the value is integer
+            elif value.strip('-').isdigit():
+                value = int(value)
+            else:
+                continue
+
+            # add a key and a value to the dictionary
+            object_params[key] = value
+
+        # creates a new instance of the class specified by the user
+        new_object = globals()[classname](**object_params)
+
+        # stores the new instance
+        new_object.save()
+
+        # prints the id of the new instance
+        print(new_object.id)
 
     def help_create(self):
         """ Help information for the create method """
@@ -164,7 +183,7 @@ class HBNBCommand(cmd.Cmd):
 
         key = c_name + "." + c_id
         try:
-            print(storage.all()[key])
+            print(storage._FileStorage__objects[key])
         except KeyError:
             print("** no instance found **")
 
@@ -196,7 +215,7 @@ class HBNBCommand(cmd.Cmd):
         key = c_name + "." + c_id
 
         try:
-            del(storage.all()[key])
+            del (storage.all()[key])
             storage.save()
         except KeyError:
             print("** no instance found **")
@@ -215,9 +234,8 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage.all(args).items():
-                if k.split('.')[0] == args:
-                    print_list.append(str(v))
+            for k, v in storage.all(HBNBCommand.classes.get(args)).items():
+                print_list.append(str(v))
         else:
             for k, v in storage.all().items():
                 print_list.append(str(v))
@@ -232,7 +250,7 @@ class HBNBCommand(cmd.Cmd):
     def do_count(self, args):
         """Count current number of class instances"""
         count = 0
-        for k, v in storage.all().items():
+        for k, v in storage._FileStorage__objects.items():
             if args == k.split('.')[0]:
                 count += 1
         print(count)
