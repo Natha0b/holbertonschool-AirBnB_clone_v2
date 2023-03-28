@@ -1,6 +1,6 @@
 <center> <h1>AirBnB clone - The console 👩‍💻</h1> </center>
 
-<img align="center" src="https://imgur.com/a/diezWVg" /></a>
+<img align="center" src="https://miro.medium.com/max/1400/0*NChTo-XqLOxLabIW" /></a>
 
 ## 	DESCRIPTION PROYECT✍
  The project aims to deploy a server on a simple copy of the** AirBnB** website. Keeping in mind that some of the features will be implemented, in order to cover all the fundamental concepts of the higher level programming path.
