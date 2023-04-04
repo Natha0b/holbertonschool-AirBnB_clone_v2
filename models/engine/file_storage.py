@@ -19,7 +19,7 @@ class FileStorage:
 
             return classes_dict
         else:
-            return FileStorage.__objects
+            return FileStorage.__objects #all devuelve todos los objetos
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
