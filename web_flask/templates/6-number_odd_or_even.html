@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<HTML>
+<HTML lang="en">
 <HEAD>
-    <title>HBNB</title>
+    <TITLE>HBNB</TITLE>
 </HEAD>
 <BODY>
-    <H1>Number: {{ n }} is {{ 'even' if n%2 == 0 else 'odd' }}</H1>
-</BODY>
+    {% if num % 2 %}
+    <H1>Number: {{ num }} is odd</H1>
+    {% else %}
+    <H1>Number: {{ num }} is even</H1>
+    {% endif %}
+  </BODY>
 </HTML>
