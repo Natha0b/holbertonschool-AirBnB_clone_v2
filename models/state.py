@@ -5,6 +5,8 @@ from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 from os import getenv
 from models.city import City
+import shlex
+import models
 
 
 class State(BaseModel, Base):
@@ -18,12 +20,16 @@ class State(BaseModel, Base):
     if storage == 'fs':
         @property
         def cities(self):
-            """Returning the cities in the current state"""
-            from models import storage
-            city_list = []
-            for city in list(storage.all().values()):
-                if city.state_id == self.id:
-                    city_list.append(city)
-            return city_list
-    if storage == 'db':
-        cities = relationship('City', backref='state', cascade='all, delete')
+            """return the cities of the current state"""
+            var = models.storage.all()
+            lista = []
+            result = []
+            for key in var:
+                city = key.replace('.', ' ')
+                city = shlex.split(city)
+                if (city[0] == 'City'):
+                    lista.append(var[key])
+            for elem in lista:
+                if (elem.state_id == self.id):
+                    result.append(elem)
+            return (result)
