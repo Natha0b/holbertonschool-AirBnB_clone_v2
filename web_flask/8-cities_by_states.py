@@ -8,12 +8,14 @@ app = Flask(__name__)
 
 
 @app.teardown_appcontext
-def close_db(self):
+def sesclose(self):
+    """close"""
     storage.close()
 
 
 @app.route('/cities_by_states', strict_slashes=False)
 def display_states_and_cities():
+    """This function will send all the states"""
     states = storage.all("State")
     sorted_states = sorted(states.values(), key=lambda x: x.name)
 
