@@ -1,26 +1,33 @@
 #!/usr/bin/python3
 """ State Module for HBNB project """
-from models.base_model import BaseModel, Base
+from models.base_model import BaseModel
+from models.base_model import Base
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 from os import getenv
-from models.city import City
-import shlex
 import models
+import shlex
 
 
 class State(BaseModel, Base):
-    """ State class """
-    __tablename__ = "states"
-
-    name = Column(String(128), nullable=False)
-
+    """
+    Represents a state for a MySQL database.
+    Inherits from SQLAlchemy Base and links to the MySQL table states.
+    Attributes:
+        __tablename__ (str): The name of the MySQL table to store States.
+        name (sqlalchemy String): The name of the State.
+        cities (sqlalchemy relationship): The State-City relationship.
+    """
     storage = getenv("HBNB_TYPE_STORAGE")
+
+    __tablename__ = "states"
+    name = Column(String(128), nullable=False)
+    cities = relationship('City', backref='state', cascade='all, delete')
 
     if storage == 'fs':
         @property
         def cities(self):
-            """return the cities of the current state"""
+            """Returning the cities in the current state"""
             var = models.storage.all()
             lista = []
             result = []
@@ -33,3 +40,5 @@ class State(BaseModel, Base):
                 if (elem.state_id == self.id):
                     result.append(elem)
             return (result)
+    if storage == 'db':
+        cities = relationship('City', backref='state', cascade='all, delete')
