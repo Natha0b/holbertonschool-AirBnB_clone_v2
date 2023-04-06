@@ -8,10 +8,7 @@ from models import storage
 from models.state import State
 
 app = Flask(__name__)
-"""
-add option where URLs with and without
-a trailing slash will be treated as equivalent.
-"""
+
 app.url_map.strict_slashes = False
 
 
