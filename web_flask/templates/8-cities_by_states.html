@@ -4,20 +4,18 @@
 <HEAD>
     <TITLE>HBNB</TITLE>
 </HEAD>
-
 <BODY>
     <H1>States</H1>
     <UL>
-        {% for state in states.values() %}
-        <LI>{{ state.id }}: <B>{{ state.name }}</B>
-            <UL>
-                {% for city in state.cities %}
-                <LI>{{ city.id }}: <B>{{ city.name }}</B></LI>
+        {% for i in states.values()|sort(attribute='name') %}
+            <LI>{{ i.id }}: <B>{{ i.name }}</B>
+                <UL>
+                {% for city in i.cities |sort(attribute='name')%}
+                    <LI>{{ city.id }}: <B>{{ city.name }}</B></LI>
                 {% endfor %}
-            </UL>
-        </LI>
+                </UL>
+            </LI>
         {% endfor %}
     </UL>
 </BODY>
-
 </HTML>
